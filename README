@@ -1,0 +1,36 @@
+NAME
+    RDF::TriN3 - notation 3 extensions for RDF::Trine
+
+DESCRIPTION
+    This module extends RDF::Trine in three ways:
+
+    *   Adds a Notation 3 parser.
+
+    *   Adds a Notation 3 serializer.
+
+    *   Provides a subclass of literals to represent Notation 3 formulae.
+
+    Implementing N3 logic and the cwm built-ins is considered outside the
+    scope of this module, though I am interested in doing that as part of a
+    separate project.
+
+BUGS
+    Please report any bugs to <http://rt.cpan.org/>.
+
+SEE ALSO
+    RDF::Trine::Node::Formula, RDF::Trine::Parser::Notation3,
+    RDF::Trine::Serializer::Notation3.
+
+    RDF::Trine.
+
+    <http://www.perlrdf.org/>.
+
+AUTHOR
+    Toby Inkster <tobyink@cpan.org>.
+
+COPYRIGHT
+    Copyright 2010 Toby Inkster
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+

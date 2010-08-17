@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rdf:RDF xmlns:dbug="http://ontologi.es/doap-bugs#" xmlns:dc="http://purl.org/dc/terms/" xmlns:dcs="http://ontologi.es/doap-changeset#" xmlns:doap="http://usefulinc.com/ns/doap#" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
-<rdf:Description rdf:nodeID="r50560C7694FC11DFBDDFEF016C8CF1FCr0">
+<rdf:Description rdf:nodeID="r14E499AEAA3D11DFBDBCCD794D47544Br0">
 	<doap:browse rdf:resource="http://goddamn.co.uk/viewvc/perlmods/RDF-TriN3/"/>
 	<rdf:type rdf:resource="http://usefulinc.com/ns/doap#SVNRepository"/>
 </rdf:Description>
@@ -21,17 +21,17 @@
 	<doap:maintainer rdf:resource="http://tobyinkster.co.uk/#i"/>
 	<doap:name>RDF-TriN3</doap:name>
 	<doap:programming-language>Perl</doap:programming-language>
-	<doap:release rdf:resource="http://purl.org/NET/cpan-uri/dist/RDF-TriN3/v_0-125"/>
-	<doap:repository rdf:nodeID="r50560C7694FC11DFBDDFEF016C8CF1FCr0"/>
+	<doap:release rdf:resource="http://purl.org/NET/cpan-uri/dist/RDF-TriN3/v_0-126"/>
+	<doap:repository rdf:nodeID="r14E499AEAA3D11DFBDBCCD794D47544Br0"/>
 	<doap:shortdesc xml:lang="en">notation 3 extensions for RDF::Trine</doap:shortdesc>
 	<doap:tester rdf:resource="http://tobyinkster.co.uk/#i"/>
 	<rdf:type rdf:resource="http://usefulinc.com/ns/doap#Project"/>
 </rdf:Description>
-<rdf:Description xmlns:ns1="http://purl.org/NET/cpan-uri/terms#" rdf:about="http://purl.org/NET/cpan-uri/dist/RDF-TriN3/v_0-125">
-	<ns1:compatible_with rdf:resource="http://purl.org/NET/cpan-uri/dist/RDF-Trine/v_0-125"/>
-	<dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2010-07-31</dc:issued>
-	<doap:file-release rdf:resource="http://backpan.cpan.org/authors/id/T/TO/TOBYINK/RDF-TriN3-0.125.tar.gz"/>
-	<doap:revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.125</doap:revision>
+<rdf:Description xmlns:ns1="http://purl.org/NET/cpan-uri/terms#" rdf:about="http://purl.org/NET/cpan-uri/dist/RDF-TriN3/v_0-126">
+	<ns1:compatible_with rdf:resource="http://purl.org/NET/cpan-uri/dist/RDF-Trine/v_0-126"/>
+	<dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2010-08-17</dc:issued>
+	<doap:file-release rdf:resource="http://backpan.cpan.org/authors/id/T/TO/TOBYINK/RDF-TriN3-0.126.tar.gz"/>
+	<doap:revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.126</doap:revision>
 	<rdf:type rdf:resource="http://usefulinc.com/ns/doap#Version"/>
 	<rdfs:comment xml:lang="en">Original version</rdfs:comment>
 </rdf:Description>

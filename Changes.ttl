@@ -22,15 +22,15 @@
 
 #############################################################
 
-my:v_0-125
+my:v_0-126
 
 	a               :Version ;
-	dc:issued       "2010-07-31"^^xsd:date ;
-	:revision       "0.125"^^xsd:string ;
-	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/RDF-TriN3-0.125.tar.gz> ;
+	dc:issued       "2010-08-17"^^xsd:date ;
+	:revision       "0.126"^^xsd:string ;
+	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/RDF-TriN3-0.126.tar.gz> ;
 	rdfs:comment    "Original version"@en ;
 	cpant:compatible_with
-	                trine:v_0-125 .
+	                trine:v_0-126 .
 
 #############################################################
 
@@ -50,7 +50,7 @@ my:project
 	:tester         toby:i ;
 	:created        "2010-07-02"^^xsd:date ;
 	:license        <http://dev.perl.org/licenses/> ;
-	:release        my:v_0-125 .
+	:release        my:v_0-126 .
 
 #############################################################
 

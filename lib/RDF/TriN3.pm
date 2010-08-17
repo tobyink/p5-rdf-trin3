@@ -6,6 +6,8 @@ use RDF::Trine::Node::Formula;
 use RDF::Trine::Parser::Notation3;
 use RDF::Trine::Serializer::Notation3;
 
+our $VERSION = '0.126';
+
 1;
 
 __END__
@@ -28,11 +30,20 @@ This module extends L<RDF::Trine> in three ways:
 
 =back
 
+=head1 BUGS AND LIMITATIONS
+
 Implementing N3 logic and the cwm built-ins is considered outside the scope
 of this module, though I am interested in doing that as part of a separate
 project.
 
-=head1 BUGS
+RDF::TriN3 currently relies entirely on RDF::Trine to provide implementations
+of the concept of graphs, and storage. Thus any graphs that can't be
+represented using RDF::Trine can't be represented in RDF::TriN3. RDF::Trine's
+graph model is a superset of RDF, but a subset of Notation 3's model. While
+this allows literal subjects, and literal and blank node predicates, these
+may not be supported by all storage engines; additionally top-level variables
+(?foo), and top-level @forSome and @forAll (i.e. not nested inside a formula)
+might cause problems.
 
 Please report any bugs to L<http://rt.cpan.org/>.
 

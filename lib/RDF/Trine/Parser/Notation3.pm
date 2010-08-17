@@ -36,7 +36,7 @@ use Scalar::Util qw(blessed looks_like_number);
 our ($VERSION, $rdf, $xsd, $logic, $owl);
 
 BEGIN {
-	$VERSION = '0.124_04';
+	$VERSION = '0.126';
 	$RDF::Trine::Parser::parser_names{ 'notation3' }   = __PACKAGE__;
 	$RDF::Trine::Parser::parser_names{ 'notation 3' }   = __PACKAGE__;
 	my $class = __PACKAGE__;

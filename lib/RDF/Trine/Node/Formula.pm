@@ -23,7 +23,7 @@ use Scalar::Util qw(blessed);
 
 our ($VERSION);
 BEGIN {
-	$VERSION	= '0.126';
+	$VERSION	= '0.128';
 }
 
 ######################################################################
@@ -70,7 +70,8 @@ sub new {
 	} else {
 		my $p    = RDF::Trine::Parser::Notation3->new;
 		my $base = shift;
-		return $p->parse_formula($base, $pattern);
+		my $r    = $p->parse_formula($base, $pattern);
+		return $r;
 	}
 }
 

@@ -6,7 +6,7 @@ use RDF::Trine::Node::Formula;
 use RDF::Trine::Parser::Notation3;
 use RDF::Trine::Serializer::Notation3;
 
-our $VERSION = '0.126';
+our $VERSION = '0.128';
 
 1;
 
@@ -44,6 +44,12 @@ this allows literal subjects, and literal and blank node predicates, these
 may not be supported by all storage engines; additionally top-level variables
 (?foo), and top-level @forSome and @forAll (i.e. not nested inside a formula)
 might cause problems.
+
+RDF::Trine::Store::DBI has some issues with literal subjects, and literal and
+blank node predicates, allowing them to be stored, but not retrieved. From
+version 0.128, RDF::Trine::Store::DBI offers a C<clear_restrictions> method
+that should resolve these issues. RDF::Trine::Store::Memory is fine. Other
+stores are not tested.
 
 Please report any bugs to L<http://rt.cpan.org/>.
 

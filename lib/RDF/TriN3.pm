@@ -4,6 +4,7 @@ use 5.008;
 use RDF::Trine;
 use RDF::Trine::Node::Formula;
 use RDF::Trine::Parser::Notation3;
+use RDF::Trine::Parser::ShorthandRDF;
 use RDF::Trine::Serializer::Notation3;
 
 our $VERSION = '0.128';
@@ -29,6 +30,9 @@ This module extends L<RDF::Trine> in three ways:
 =item * Provides a subclass of literals to represent Notation 3 formulae.
 
 =back
+
+In addition, a parser is provided for Notation 3 extended with ShorthandRDF
+notation - L<http://esw.w3.org/ShorthandRDF>.
 
 =head1 BUGS AND LIMITATIONS
 
@@ -59,9 +63,13 @@ L<RDF::Trine::Node::Formula>,
 L<RDF::Trine::Parser::Notation3>,
 L<RDF::Trine::Serializer::Notation3>.
 
+L<RDF::Trine::Parser::ShorthandRDF>.
+
 L<RDF::Trine>.
 
 L<http://www.perlrdf.org/>.
+
+L<http://www.w3.org/DesignIssues/Notation3>.
 
 =head1 AUTHOR
 

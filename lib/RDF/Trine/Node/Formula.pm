@@ -32,7 +32,7 @@ BEGIN {
 
 Formulae are implemented as a subclass of literals. Parts of Trine that have no special
 knowledge about formulae (e.g. the Turtle serialiser) will just see them as literals
-with a particular datatype URI (http://open.vocab.org/terms/Formula).s
+with a particular datatype URI (http://open.vocab.org/terms/Formula).
 
 If your code needs to detect formulae nodes, try:
 

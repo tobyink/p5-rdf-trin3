@@ -10,6 +10,9 @@ DESCRIPTION
 
     *   Provides a subclass of literals to represent Notation 3 formulae.
 
+    In addition, a parser is provided for Notation 3 extended with
+    ShorthandRDF notation - <http://esw.w3.org/ShorthandRDF>.
+
 BUGS AND LIMITATIONS
     Implementing N3 logic and the cwm built-ins is considered outside the
     scope of this module, though I am interested in doing that as part of a
@@ -36,9 +39,13 @@ SEE ALSO
     RDF::Trine::Node::Formula, RDF::Trine::Parser::Notation3,
     RDF::Trine::Serializer::Notation3.
 
+    RDF::Trine::Parser::ShorthandRDF.
+
     RDF::Trine.
 
     <http://www.perlrdf.org/>.
+
+    <http://www.w3.org/DesignIssues/Notation3>.
 
 AUTHOR
     Toby Inkster <tobyink@cpan.org>.

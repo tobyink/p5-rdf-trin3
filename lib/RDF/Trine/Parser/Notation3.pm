@@ -332,7 +332,7 @@ sub _verb {
 	} elsif ($self->_test('=')) {
 		$self->_eat('=');
 		return [ $owl->sameAs, 0 ];
-	} elsif ($self->_test('a')) {
+	} elsif ($self->{tokens} =~ m'^a\b') {
 		$self->_eat('a');
 		return [ $rdf->type , 0 ];
 	} elsif ($self->_predicate_test()) {

@@ -2,8 +2,7 @@ use Test::More tests => 7;
 BEGIN { use_ok('RDF::TriN3') };
 
 my $store = RDF::Trine::Store::DBI->temporary_store;
-$store->{restrictions}{subject}   = [];
-$store->{restrictions}{predicate} = [];
+$store->clear_restrictions;
 my $model = RDF::Trine::Model->new($store);
 ok($model, "RDF::Trine autoloaded");
 
@@ -28,7 +27,7 @@ $parser->parse_into_model('http://example.com/', $n3, $model);
 
 is($model->count_statements, 1, "Got exactly one statement.");
 
-my $iter = $model->get_statements(undef, undef, undef, undef, { restrictions=>{} });
+my $iter = $model->get_statements(undef, undef, undef, undef);
 my $f;
 while (my $st = $iter->next)
 {

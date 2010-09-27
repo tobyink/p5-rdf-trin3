@@ -42,6 +42,8 @@ my:v_0-128
 	                trine:v_0-128 ;
 	dcs:changeset [
 		dcs:versus my:v_0-126 ;
+		dcs:item   [ rdfs:label "Added more test cases."@en ] ;
+		dcs:item   [ rdfs:label "RDF::Trine::Parser::ShorthandRDF"@en ; a dcs:Addition ] ;
 		dcs:item   [ rdfs:label "RDF::Trine::Parser::Notation3::parse_formula works."@en ; a dcs:Bugfix ] ;
 		dcs:item   [ rdfs:label "RDF::Trine::Store::DBI compatibility note."@en ; a dcs:Bugfix ]
 		] .

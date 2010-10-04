@@ -93,26 +93,40 @@ sub _Document {
 # Shorthand-specific directives
 sub _directive {
 	my $self	= shift;
-	if ($self->_namepattern_test()) {
-		$self->_namepattern();
-	} elsif ($self->_dtpattern_test()) {
-		$self->_dtpattern();
+	if ($self->_at_namepattern_test()) {
+		$self->_at_namepattern();
+	} elsif ($self->_at_dtpattern_test()) {
+		$self->_at_dtpattern();
+	} elsif ($self->_at_term_test()) {
+		$self->_at_term();
+	} elsif ($self->_at_pattern_test()) {
+		$self->_at_pattern();
 	} else {
 		$self->SUPER::_directive(@_);
 	}
 }
 
-sub _namepattern_test {
+sub _at_namepattern_test {
 	my $self = shift;
 	return $self->__startswith('@namepattern');
 }
 
-sub _dtpattern_test {
+sub _at_dtpattern_test {
 	my $self = shift;
-	return $self->__startswith('@datatype');
+	return $self->__startswith('@dtpattern');
 }
 
-sub _namepattern {
+sub _at_term_test {
+	my $self = shift;
+	return $self->__startswith('@term');
+}
+
+sub _at_pattern_test {
+	my $self = shift;
+	return $self->__startswith('@pattern');
+}
+
+sub _at_namepattern {
 	my $self	= shift;
 	
 	$self->_eat('@namepattern');
@@ -129,10 +143,31 @@ sub _namepattern {
 	return $self->{shorthands}[-1];
 }
 
-sub _dtpattern {
+sub _at_pattern {
 	my $self	= shift;
 	
-	$self->_eat('@datatype');
+	$self->_eat('@pattern');
+	$self->_ws();
+	$self->__consume_ws();
+	
+	my $pattern =  $self->_literal()->literal_value;
+	$self->__consume_ws();
+	
+	my $thing;
+	if ($self->_resource_test)
+		{ $thing = $self->_resource(); }
+	else
+		{ $thing = $self->_literal(); }
+	$self->__consume_ws();
+
+	push @{ $self->{shorthands} }, ['@pattern', $pattern, $thing];
+	return $self->{shorthands}[-1];
+}
+
+sub _at_dtpattern {
+	my $self	= shift;
+	
+	$self->_eat('@dtpattern');
 	$self->_ws();
 	$self->__consume_ws();
 	
@@ -142,7 +177,34 @@ sub _dtpattern {
 	my $uri     =  $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@datatype', $pattern, $uri];
+	push @{ $self->{shorthands} }, ['@dtpattern', $pattern, $uri];
+	return $self->{shorthands}[-1];
+}
+
+sub _at_term {
+	my $self	= shift;
+	
+	$self->_eat('@term');
+	$self->_ws();
+	$self->__consume_ws();
+	
+	my $token;
+	
+	if ( $self->{'tokens'} =~ m/^([A-Za-z_][A-Za-z0-9_-]*)\s/ )
+	{
+		$token = $1;
+		$self->_eat($token);
+	}
+	else
+	{
+		$self->_eat('token_name'); # and die!
+	}
+	$self->__consume_ws();
+
+	my $thing = $self->_any_node();
+	$self->__consume_ws();
+
+	push @{ $self->{shorthands} }, ['@term', $token, $thing];
 	return $self->{shorthands}[-1];
 }
 
@@ -153,10 +215,27 @@ sub _resource_test {
 	my $rv = $self->SUPER::_resource_test(@_);
 	return $rv if $rv;
 	
-	foreach my $shorthand ( @{ $self->{shorthands} } )
+	foreach my $shorthand ( reverse @{ $self->{shorthands} } )
 	{
-		my ($type, $pattern, $uri) = @$shorthand;
-		if ( $self->{'tokens'} =~ m/^($pattern)\b/ )
+		my ($type, $pattern, $full) = @$shorthand;
+		
+		if ($type eq '@dtpattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		{
+			return 1;
+		}
+		elsif ($type eq '@namepattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		{
+			return 1;
+		}
+		elsif ($type eq '@pattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		{
+			return 1;
+		}
+		elsif ($type eq '@term'
+		and (substr $self->{'tokens'}, 0, (length $pattern)) eq $pattern)
 		{
 			return 1;
 		}
@@ -168,26 +247,114 @@ sub _resource_test {
 sub _resource {
 	my $self	= shift;
 	
-	foreach my $shorthand ( @{ $self->{shorthands} } )
+	foreach my $shorthand ( reverse @{ $self->{shorthands} } )
 	{
-		my ($type, $pattern, $uri) = @$shorthand;
-		if ( $self->{'tokens'} =~ m/^($pattern)\b/ )
+		my ($type, $pattern, $full) = @$shorthand;
+		
+		if ($type eq '@dtpattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		{
+			my $token = $1;
+			$self->_eat($token);			
+			return RDF::Trine::Node::Literal->new($token, undef, $full);
+		}
+		elsif ($type eq '@namepattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		{
+			my $token = $1;
+			$self->_eat($token);
+			return $self->__URI($full.$token, $self->{baseURI});
+		}
+		elsif ($type eq '@pattern'
+		and $self->{'tokens'} =~ m/^($pattern)\b/)
 		{
 			my $token = $1;
 			$self->_eat($token);
 			
-			if ($type eq '@datatype')
+			if ($full->is_literal)
 			{
-				return RDF::Trine::Node::Literal->new($token, undef, $uri);
+				return RDF::Trine::Node::Literal->new(
+					$self->_at_pattern_($token, $pattern, $full->literal_value),
+					$full->literal_value_language,
+					$full->literal_datatype,
+					);
 			}
-			elsif ($type eq '@namepattern')
+			elsif ($full->is_resource)
 			{
-				return $self->__URI($uri.$token, $self->{baseURI});
+				return RDF::Trine::Node::Resource->new(
+					$self->_at_pattern_($token, $pattern, $full->uri),
+					);
 			}
+		}
+		elsif ($type eq '@term'
+		and (substr $self->{'tokens'}, 0, (length $pattern)) eq $pattern)
+		{
+			$self->_eat($pattern);
+			return $full;
 		}
 	}	
 
 	return $self->SUPER::_resource(@_);
+}
+
+sub _at_pattern_
+{
+	my ($self, $thingy, $pattern, $template) = @_;
+	
+	$template = "$template";
+
+	my %vals = (0 => $thingy);
+	my @matches = ($thingy =~ /$pattern/);
+	for (my $i=0; $i <= $#matches; $i++)
+	{
+		$vals{$i + 1} = $matches[$i];
+	}
+	foreach my $bufname (keys %-)
+	{
+		$vals{$bufname} = $-{$bufname}->[0];
+	}
+
+	my $rv = '';
+	my $count = 0;
+	while (length $template)
+	{
+		$count++;
+		die if $count > 300;
+		
+		if ((substr $template, 0, 1) eq '$')
+		{
+			$template = substr $template, 1;
+			
+			my $buffer;
+			if ($template =~ /^ \{ ([^\}]+) \} (.*) $/x)
+			{
+				($buffer, $template) = ($1, $2);
+			}
+			elsif ($template =~ /^(\d+)/)
+			{
+				$buffer = $1;
+				$template = substr($template, length $buffer);
+			}
+			elsif ($template =~ /^([_A-Za-z][_A-Za-z0-9]*)/)
+			{
+				$buffer = $1;
+				$template = substr($template, length $buffer);
+			}
+			else
+			{
+				throw RDF::Trine::Error::ParserError -text => "Unexpected pattern in replace";
+			}
+			$rv .= $vals{$buffer};
+		}
+		else
+		{
+			my ($start, $rest) = split /\$/, $template, 2;
+			$rv .= $start;
+			$template = '$'.$rest;
+		}
+	}
+
+	return $rv;
 }
 
 1;

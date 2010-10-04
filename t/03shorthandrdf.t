@@ -6,9 +6,10 @@ my $model = RDF::Trine::Model->temporary_model;
 my $n3 = <<'NOTATION3';
 @keywords is, of, a.
 @namepattern "\d{1,2}[A-Z][a-z]{2}\d{4}" <http://example.com/days/> .
-@datatype    "\d{1,2}[a-z]{3}\d{4}"      <http://example.com/day> .
+@dtpattern   "\d{1,2}[a-z]{3}\d{4}"      <http://example.com/day> .
+@term        lit                         :as_literal .
 
-1Apr2003 as_literal 1apr2003 .
+1Apr2003 lit 1apr2003 .
 
 NOTATION3
 

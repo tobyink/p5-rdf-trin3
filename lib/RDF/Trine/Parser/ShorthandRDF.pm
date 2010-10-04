@@ -13,38 +13,8 @@ RDF::Trine::Parser::ShorthandRDF - Shorthand RDF Parser
 
 =head1 DESCRIPTION
 
-ShorthandRDF is an extension of N3 syntax. It defines a couple of extra "at rules".
-
-=head2 @namepattern
-
-Like C<< @prefix >> this specifies that particular tokens should be expanded through
-the addition of a URI prefix. However rather than defining a QName prefix for these
-tokens, a regular expression for them is defined.
-
-  @namepattern "\d{1,2}[A-Z][a-z]{2}\d{4}" <http://example.net/days/> .
-  
-  <#someEvent> <#onDay> 6Apr2008 .
-  
-Is equivalent to the following Turtle:
-
-  <#someEvent> <#onDay> <http://example.net/days/6Apr2008> .
-
-=head2 @datatype
-
-Similar to C<< @namepattern >>, but produces a datatyped literal instead.
-
-  @datatype "\d{1,2}[A-Z][a-z]{2}\d{4}" <http://example.net/day> .
-  
-  <#someEvent> <#onDay> 6Apr2008 .
-
-Is equivalent to the following Turtle:
-
-  <#someEvent> <#onDay> "6Apr2008"^^<http://example.net/day> .
-
-=head2 Precedence
-
-In the case of multiple C<< @namepattern >> or C<< @datatype >> definitions that
-match the same token, the earlier definition wins.
+ShorthandRDF is an extension of N3 syntax. It's currently defined at
+L<http://esw.w3.org/ShorthandRDF>.
 
 =head1 METHODS
 
@@ -69,7 +39,7 @@ use Scalar::Util qw(blessed looks_like_number);
 our ($VERSION, $rdf, $xsd, $logic, $owl);
 
 BEGIN {
-	$VERSION = '0.128';
+	$VERSION = '0.129';
 	$RDF::Trine::Parser::parser_names{ 'shorthand-rdf' }  = __PACKAGE__;
 	$RDF::Trine::Parser::parser_names{ 'shorthandrdf' }   = __PACKAGE__;
 	$RDF::Trine::Parser::parser_names{ 'shorthand' }      = __PACKAGE__;
@@ -88,6 +58,15 @@ sub _Document {
 	local($self->{'keywords'}) = undef;
 	local($self->{'shorthands'}) = [];
 	$self->SUPER::_Document(@_);
+}
+
+sub _directive_test {
+	my $self	= shift;
+	if ($self->{'tokens'} =~ m/^\@(base|prefix|forSome|forAll|keywords|namepattern|dtpattern|pattern|term)\b/io) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 # Shorthand-specific directives
@@ -133,13 +112,13 @@ sub _at_namepattern {
 	$self->_ws();
 	$self->__consume_ws();
 	
-	my $pattern =  $self->_literal()->literal_value;
+	my $pattern = $self->_literal()->literal_value;
 	$self->__consume_ws();
 	
-	my $uri     =  $self->_uriref();
+	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@namepattern', $pattern, $uri];
+	push @{ $self->{shorthands} }, ['@pattern', $pattern, RDF::Trine::Node::Resource->new($uri.'$0'), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -150,7 +129,7 @@ sub _at_pattern {
 	$self->_ws();
 	$self->__consume_ws();
 	
-	my $pattern =  $self->_literal()->literal_value;
+	my $pattern = $self->_literal()->literal_value;
 	$self->__consume_ws();
 	
 	my $thing;
@@ -160,7 +139,7 @@ sub _at_pattern {
 		{ $thing = $self->_literal(); }
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', $pattern, $thing];
+	push @{ $self->{shorthands} }, ['@pattern', $pattern, $thing, $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -171,13 +150,13 @@ sub _at_dtpattern {
 	$self->_ws();
 	$self->__consume_ws();
 	
-	my $pattern =  $self->_literal()->literal_value;
+	my $pattern = $self->_literal()->literal_value;
 	$self->__consume_ws();
 	
-	my $uri     =  $self->_uriref();
+	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@dtpattern', $pattern, $uri];
+	push @{ $self->{shorthands} }, ['@pattern', $pattern, RDF::Trine::Node::Literal->new('$0', undef, $uri), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -190,7 +169,7 @@ sub _at_term {
 	
 	my $token;
 	
-	if ( $self->{'tokens'} =~ m/^([A-Za-z_][A-Za-z0-9_-]*)\s/ )
+	if ( $self->{'tokens'} =~ m/^([A-Za-z_][A-Za-z0-9_-]*)\s/o )
 	{
 		$token = $1;
 		$self->_eat($token);
@@ -217,19 +196,9 @@ sub _resource_test {
 	
 	foreach my $shorthand ( reverse @{ $self->{shorthands} } )
 	{
-		my ($type, $pattern, $full) = @$shorthand;
+		my ($type, $pattern, $full, $basethen) = @$shorthand;
 		
-		if ($type eq '@dtpattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
-		{
-			return 1;
-		}
-		elsif ($type eq '@namepattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
-		{
-			return 1;
-		}
-		elsif ($type eq '@pattern'
+		if ($type eq '@pattern'
 		and $self->{'tokens'} =~ m/^($pattern)\b/)
 		{
 			return 1;
@@ -249,41 +218,35 @@ sub _resource {
 	
 	foreach my $shorthand ( reverse @{ $self->{shorthands} } )
 	{
-		my ($type, $pattern, $full) = @$shorthand;
+		my ($type, $pattern, $full, $basethen) = @$shorthand;
 		
-		if ($type eq '@dtpattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
-		{
-			my $token = $1;
-			$self->_eat($token);			
-			return RDF::Trine::Node::Literal->new($token, undef, $full);
-		}
-		elsif ($type eq '@namepattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
-		{
-			my $token = $1;
-			$self->_eat($token);
-			return $self->__URI($full.$token, $self->{baseURI});
-		}
-		elsif ($type eq '@pattern'
+		if ($type eq '@pattern'
 		and $self->{'tokens'} =~ m/^($pattern)\b/)
 		{
 			my $token = $1;
 			$self->_eat($token);
 			
-			if ($full->is_literal)
+			if ($full->is_literal && $full->has_datatype)
+			{
+				my $replaced_uri = $self->_PATTERN_($token, $pattern, $full->literal_datatype);
+				my $absolute_uri = $self->__URI($replaced_uri, $basethen);
+				return RDF::Trine::Node::Literal->new(
+					$self->_PATTERN_($token, $pattern, $full->literal_value),
+					undef,
+					$absolute_uri,
+					);
+			}
+			elsif ($full->is_literal)
 			{
 				return RDF::Trine::Node::Literal->new(
-					$self->_at_pattern_($token, $pattern, $full->literal_value),
-					$full->literal_value_language,
-					$full->literal_datatype,
+					$self->_PATTERN_($token, $pattern, $full->literal_value),
+					($full->has_language ? $self->_PATTERN_($token, $pattern, $full->literal_value_language) : undef),
 					);
 			}
 			elsif ($full->is_resource)
 			{
-				return RDF::Trine::Node::Resource->new(
-					$self->_at_pattern_($token, $pattern, $full->uri),
-					);
+				my $replaced_uri = $self->_PATTERN_($token, $pattern, $full->uri);
+				return $self->__URI($replaced_uri, $basethen);
 			}
 		}
 		elsif ($type eq '@term'
@@ -297,11 +260,13 @@ sub _resource {
 	return $self->SUPER::_resource(@_);
 }
 
-sub _at_pattern_
+sub _PATTERN_
 {
 	my ($self, $thingy, $pattern, $template) = @_;
-	
+
+	return unless defined $template;
 	$template = "$template";
+	return $template unless $template =~ /\$/;
 
 	my %vals = (0 => $thingy);
 	my @matches = ($thingy =~ /$pattern/);
@@ -313,7 +278,9 @@ sub _at_pattern_
 	{
 		$vals{$bufname} = $-{$bufname}->[0];
 	}
-
+	
+	my $orig_template = $template;
+	
 	my $rv = '';
 	my $count = 0;
 	while (length $template)
@@ -326,23 +293,23 @@ sub _at_pattern_
 			$template = substr $template, 1;
 			
 			my $buffer;
-			if ($template =~ /^ \{ ([^\}]+) \} (.*) $/x)
+			if ($template =~ /^ \{ ([^\}]+) \} (.*) $/xo)
 			{
 				($buffer, $template) = ($1, $2);
 			}
-			elsif ($template =~ /^(\d+)/)
+			elsif ($template =~ /^(\d+)/o)
 			{
 				$buffer = $1;
 				$template = substr($template, length $buffer);
 			}
-			elsif ($template =~ /^([_A-Za-z][_A-Za-z0-9]*)/)
+			elsif ($template =~ /^([_A-Za-z][_A-Za-z0-9]*)/o)
 			{
 				$buffer = $1;
 				$template = substr($template, length $buffer);
 			}
 			else
 			{
-				throw RDF::Trine::Error::ParserError -text => "Unexpected pattern in replace";
+				throw RDF::Trine::Error::ParserError -text => "Unexpected pattern in replace: ${orig_template}\n";
 			}
 			$rv .= $vals{$buffer};
 		}
@@ -350,7 +317,7 @@ sub _at_pattern_
 		{
 			my ($start, $rest) = split /\$/, $template, 2;
 			$rv .= $start;
-			$template = '$'.$rest;
+			$template = '$'.(defined $rest ? $rest : '');
 		}
 	}
 
@@ -363,7 +330,10 @@ __END__
 
 =head1 SEE ALSO
 
-L<http://esw.w3.org/ShorthandRDF> .
+L<RDF::TriN3>,
+L<RDF::Trine::Parser::Notation3>.
+
+L<http://esw.w3.org/ShorthandRDF>.
 
 =head1 AUTHOR
 

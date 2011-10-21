@@ -13,12 +13,14 @@ my $n3 = <<'NOTATION3';
 @import <http://buzzword.org.uk/2011/test.n3> .
 
 1Apr2003 lit 1apr2003 ; <foo> <bar> .
-
+<> dc:creator tobyink .
 tobyink foaf:name "Toby Inkster" .
 
 NOTATION3
 
-my $parser = RDF::Trine::Parser::ShorthandRDF->new();
+my $parser = RDF::Trine::Parser::ShorthandRDF->new(profile => <<'STUFF');
+@prefix dc: <http://purl.org/dc/terms/> .
+STUFF
 
 $parser->parse_into_model('http://example.org/', $n3, $model);
 

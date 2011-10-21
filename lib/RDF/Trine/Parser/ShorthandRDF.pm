@@ -54,9 +54,11 @@ BEGIN {
 sub _Document {
 	my $self	= shift;
 	my $uri  = $self->{'baseURI'};
+	$self->{bindings}     = {};
 	$self->{bindings}{''} = ($uri =~ /#$/ ? $uri : "${uri}#");
 	$self->{'keywords'}   = undef;
 	$self->{'shorthands'} = [];
+	$self->_apply_profile($self->{'baseURI'}, $self->{'profile'}, 0) if defined $self->{'profile'};
 	$self->SUPER::_Document(@_);
 }
 
@@ -223,9 +225,17 @@ sub _at_profile {
 	unless ($resp->is_success) {
 		throw RDF::Trine::Error::ParserError -text => $resp->status_line;
 	}
+
+	return $self->_apply_profile($resp->base, $resp->decoded_content, $import);
+}
+
+sub _apply_profile
+{
+	my ($self, $base, $data, $import) = @_;
 	
-	my $child = __PACKAGE__->new;
-	$child->parse($resp->base, $resp->decoded_content, sub {
+	my $class = ref $self;
+	my $child = $class->new;
+	$child->parse($base, $data, sub {
 		$self->{handle_triple}->($_[0]) if $import;
 		});
 		
@@ -398,7 +408,7 @@ Based on RDF::Trine::Parser::Turtle by Gregory Todd Williams.
 
 Copyright (c) 2006-2010 Gregory Todd Williams. 
 
-Copyright (c) 2010 Toby Inkster.
+Copyright (c) 2010-2011 Toby Inkster.
 
 All rights reserved. This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

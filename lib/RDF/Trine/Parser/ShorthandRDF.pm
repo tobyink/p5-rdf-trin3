@@ -53,16 +53,16 @@ BEGIN {
 # Force the default prefix to be bound to the base URI.
 sub _Document {
 	my $self	= shift;
-	my $uri = $self->{'baseURI'};
-	local($self->{bindings}{''}) = ($uri =~ /#$/ ? $uri : "${uri}#");
-	local($self->{'keywords'}) = undef;
-	local($self->{'shorthands'}) = [];
+	my $uri  = $self->{'baseURI'};
+	$self->{bindings}{''} = ($uri =~ /#$/ ? $uri : "${uri}#");
+	$self->{'keywords'}   = undef;
+	$self->{'shorthands'} = [];
 	$self->SUPER::_Document(@_);
 }
 
 sub _directive_test {
 	my $self	= shift;
-	if ($self->{'tokens'} =~ m/^\@(base|prefix|forSome|forAll|keywords|namepattern|dtpattern|pattern|term)\b/io) {
+	if ($self->{'tokens'} =~ m/^\@(base|prefix|forSome|forAll|keywords|namepattern|dtpattern|pattern|term|profile|import)\b/io) {
 		return 1;
 	} else {
 		return 0;
@@ -80,6 +80,8 @@ sub _directive {
 		$self->_at_term();
 	} elsif ($self->_at_pattern_test()) {
 		$self->_at_pattern();
+	} elsif ($self->_at_profile_test()) {
+		$self->_at_profile();
 	} else {
 		$self->SUPER::_directive(@_);
 	}
@@ -103,6 +105,11 @@ sub _at_term_test {
 sub _at_pattern_test {
 	my $self = shift;
 	return $self->__startswith('@pattern');
+}
+
+sub _at_profile_test {
+	my $self = shift;
+	return $self->__startswith('@profile') || $self->__startswith('@import');
 }
 
 sub _at_namepattern {
@@ -184,6 +191,52 @@ sub _at_term {
 	$self->__consume_ws();
 
 	push @{ $self->{shorthands} }, ['@term', $token, $thing];
+	return $self->{shorthands}[-1];
+}
+
+sub _at_profile {
+	my $self	= shift;
+	
+	my $import = 0;
+	if ($self->__startswith('@profile'))
+		{ $self->_eat('@profile'); }
+	else
+		{ $self->_eat('@import'); $import++; }
+	
+	$self->_ws();
+	$self->__consume_ws();
+	
+	my $url = $self->_uriref();
+	$self->__consume_ws();
+	
+	$url = $self->__URI($url, $self->{baseURI})->uri;
+	
+	$self->{handle_triple}->(RDF::Trine::Statement->new(
+		$self->__URI('', $self->{baseURI}),
+		RDF::Trine::Node::Resource->new('http://www.w3.org/2002/07/owl#imports'),
+		RDF::Trine::Node::Resource->new($url),		
+		)) if $import;
+
+	my $ua = LWP::UserAgent->new(agent => "RDF::TriN3/$RDF::TriN3::VERSION");
+	$ua->default_headers->push_header(Accept => 'text/x-shorthand-rdf, text/n3, text/turtle');
+	my $resp = $ua->get($url);
+	unless ($resp->is_success) {
+		throw RDF::Trine::Error::ParserError -text => $resp->status_line;
+	}
+	
+	my $child = __PACKAGE__->new;
+	$child->parse($resp->base, $resp->decoded_content, sub {
+		$self->{handle_triple}->($_[0]) if $import;
+		});
+		
+	my %child_bindings = %{ $child->{bindings} || {} };
+	while (my ($prefix, $full) = each %child_bindings)
+	{
+		$self->{bindings}{$prefix} = $full
+			if length $prefix;
+	}
+	
+	push @{ $self->{shorthands} }, @{ $child->{shorthands} || [] };
 	return $self->{shorthands}[-1];
 }
 

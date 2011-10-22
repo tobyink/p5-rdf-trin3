@@ -1,7 +1,7 @@
-use lib "lib";
-use RDF::TriN3;
+#!/usr/bin/perl
 
-my $model = RDF::Trine::Model->temporary_model;
+use 5.010;
+use RDF::TriN3;
 
 my $n3 = <<'NOTATION3';
 @keywords is, of, a.
@@ -22,9 +22,4 @@ my $parser = RDF::Trine::Parser::ShorthandRDF->new(profile => <<'STUFF');
 @prefix dc: <http://purl.org/dc/terms/> .
 STUFF
 
-$parser->parse_into_model('http://example.org/', $n3, $model);
-
-my $iter = $model->as_stream;
-while (my $st = $iter->next) {
-	print $st->sse . "\n";
-};
+$parser->parse('http://example.org/', $n3, sub {say $_[0]->sse});

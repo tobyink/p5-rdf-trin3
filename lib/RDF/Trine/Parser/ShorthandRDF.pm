@@ -24,6 +24,7 @@ This package exposes the same methods as RDF::Trine::Parser::Notation3.
 
 package RDF::Trine::Parser::ShorthandRDF;
 
+use 5.010;
 use strict;
 use warnings;
 no warnings 'redefine';
@@ -36,18 +37,28 @@ use RDF::Trine::Node;
 use RDF::Trine::Error;
 use Scalar::Util qw(blessed looks_like_number);
 
-our ($VERSION, $rdf, $xsd, $logic, $owl);
+our ($VERSION, $AUTHORITY);
 
-BEGIN {
-	$VERSION = '0.129';
-	$RDF::Trine::Parser::parser_names{ 'shorthand-rdf' }  = __PACKAGE__;
-	$RDF::Trine::Parser::parser_names{ 'shorthandrdf' }   = __PACKAGE__;
-	$RDF::Trine::Parser::parser_names{ 'shorthand' }      = __PACKAGE__;
+BEGIN 
+{
+	$VERSION   = '0.136';
+	$AUTHORITY = 'cpan:TOBYINK';
+	
 	my $class = __PACKAGE__;
-	$RDF::Trine::Parser::encodings{ $class } = 'utf8';
-	foreach my $type (qw(text/x.shorthand-rdf text/x-shorthand-rdf)) {
-		$RDF::Trine::Parser::media_types{ $type } = __PACKAGE__;
-	}
+	$RDF::Trine::Parser::encodings{$class } = 'utf8';
+	$RDF::Trine::Parser::canonical_media_types{ $class } = 'text/x.shorthand-rdf';
+	
+	$RDF::Trine::Parser::parser_names{$_} = __PACKAGE__
+		foreach ('shorthand', 'shorthandrdf', 'shorthand-rdf', 'shorthand rdf');
+	
+	$RDF::Trine::Parser::media_types{$_} = __PACKAGE__
+		foreach qw(text/x.shorthand-rdf text/x-shorthand-rdf);
+	
+	$RDF::Trine::Parser::file_extensions{$_} = __PACKAGE__
+		foreach qw(n3x);
+
+	$RDF::Trine::Parser::format_uris{$_} = __PACKAGE__
+		foreach ('http://buzzword.org.uk/2010/n3x');
 }
 
 # Force the default prefix to be bound to the base URI.
@@ -404,13 +415,19 @@ Toby Inkster  C<< <tobyink@cpan.org> >>
 
 Based on RDF::Trine::Parser::Turtle by Gregory Todd Williams. 
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENCE
 
 Copyright (c) 2006-2010 Gregory Todd Williams. 
 
 Copyright (c) 2010-2011 Toby Inkster.
 
-All rights reserved. This program is free software; you can redistribute
-it and/or modify it under the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=head1 DISCLAIMER OF WARRANTIES
+
+THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 =cut

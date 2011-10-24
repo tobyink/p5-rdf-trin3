@@ -67,15 +67,33 @@ sub _Document {
 	my $uri  = $self->{'baseURI'};
 	$self->{bindings}     = {};
 	$self->{bindings}{''} = ($uri =~ /#$/ ? $uri : "${uri}#");
-	$self->{'keywords'}   = undef;
-	$self->{'shorthands'} = [];
-	$self->_apply_profile($self->{'baseURI'}, $self->{'profile'}, 0) if defined $self->{'profile'};
+	$self->{keywords}     = undef;
+	$self->{shorthands}   = [];
+	$self->_apply_profile($self->{baseURI}, $self->{profile}, 0) if defined $self->{profile};
 	$self->SUPER::_Document(@_);
 }
 
+sub __consume_ws {
+	my $self	= shift;
+	BIT: while ($self->{tokens} =~ m/^[\t\r\n #]/)
+	{
+		if ($self->{tokens} =~ m/^[#]/)
+		{
+			foreach my $shorthand ( reverse @{ $self->{shorthands} } )
+			{
+				my ($type, $pattern, $full, $basethen) = @$shorthand;				
+				last BIT if ($type eq '@pattern' and $self->{tokens} =~ $pattern);
+			}
+		}
+		
+		$self->_ws();
+	}
+}
+
+
 sub _directive_test {
 	my $self	= shift;
-	if ($self->{'tokens'} =~ m/^\@(base|prefix|forSome|forAll|keywords|namepattern|dtpattern|pattern|term|profile|import)\b/io) {
+	if ($self->{tokens} =~ m/^\@(base|prefix|forSome|forAll|keywords|namepattern|dtpattern|pattern|term|profile|import)\b/io) {
 		return 1;
 	} else {
 		return 0;
@@ -138,7 +156,7 @@ sub _at_namepattern {
 	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', $pattern, RDF::Trine::Node::Resource->new($uri.'$0'), $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, RDF::Trine::Node::Resource->new($uri.'$0'), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -159,7 +177,7 @@ sub _at_pattern {
 		{ $thing = $self->_literal(); }
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', $pattern, $thing, $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, $thing, $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -176,7 +194,7 @@ sub _at_dtpattern {
 	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', $pattern, RDF::Trine::Node::Literal->new('$0', undef, $uri), $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, RDF::Trine::Node::Literal->new('$0', undef, $uri), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -231,7 +249,7 @@ sub _at_profile {
 		)) if $import;
 
 	my $ua = LWP::UserAgent->new(agent => "RDF::TriN3/$RDF::TriN3::VERSION");
-	$ua->default_headers->push_header(Accept => 'text/x-shorthand-rdf, text/n3, text/turtle');
+	$ua->default_headers->push_header(Accept => 'text/x.shorthand-rdf, text/x-shorthand-rdf, text/n3, text/turtle');
 	my $resp = $ua->get($url);
 	unless ($resp->is_success) {
 		throw RDF::Trine::Error::ParserError -text => $resp->status_line;
@@ -272,16 +290,10 @@ sub _resource_test {
 	{
 		my ($type, $pattern, $full, $basethen) = @$shorthand;
 		
-		if ($type eq '@pattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
-		{
-			return 1;
-		}
-		elsif ($type eq '@term'
-		and (substr $self->{'tokens'}, 0, (length $pattern)) eq $pattern)
-		{
-			return 1;
-		}
+		if ($type eq '@pattern' and $self->{'tokens'} =~ $pattern)
+			{ return 1; }
+		elsif ($type eq '@term' and $self->__startswith($pattern))
+			{ return 1; }
 	}	
 
 	return 0;
@@ -289,13 +301,12 @@ sub _resource_test {
 
 sub _resource {
 	my $self	= shift;
-	
+
 	foreach my $shorthand ( reverse @{ $self->{shorthands} } )
 	{
 		my ($type, $pattern, $full, $basethen) = @$shorthand;
 		
-		if ($type eq '@pattern'
-		and $self->{'tokens'} =~ m/^($pattern)\b/)
+		if ($type eq '@pattern' and $self->{'tokens'} =~ $pattern)
 		{
 			my $token = $1;
 			$self->_eat($token);
@@ -323,8 +334,7 @@ sub _resource {
 				return $self->__URI($replaced_uri, $basethen);
 			}
 		}
-		elsif ($type eq '@term'
-		and (substr $self->{'tokens'}, 0, (length $pattern)) eq $pattern)
+		elsif ($type eq '@term' and $self->__startswith($pattern))
 		{
 			$self->_eat($pattern);
 			return $full;

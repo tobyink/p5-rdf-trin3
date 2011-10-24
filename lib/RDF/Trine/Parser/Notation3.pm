@@ -21,6 +21,7 @@ This package exposes the standard RDF::Trine::Parser methods, plus:
 
 package RDF::Trine::Parser::Notation3;
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
@@ -28,7 +29,7 @@ no warnings 'redefine';
 no warnings 'once';
 use base qw(RDF::Trine::Parser::Turtle);
 use Data::UUID;
-use RDF::Trine qw(literal);
+use RDF::Trine qw();
 use RDF::Trine::Statement;
 use RDF::Trine::Namespace qw[rdf rdfs owl xsd];
 use RDF::Trine::Node;

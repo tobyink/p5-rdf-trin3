@@ -24,6 +24,7 @@ This package exposes the same methods as RDF::Trine::Parser::Notation3.
 
 package RDF::Trine::Parser::ShorthandRDF;
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
@@ -156,7 +157,7 @@ sub _at_namepattern {
 	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, RDF::Trine::Node::Resource->new($uri.'$0'), $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)/, RDF::Trine::Node::Resource->new($uri.'$0'), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -177,7 +178,7 @@ sub _at_pattern {
 		{ $thing = $self->_literal(); }
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, $thing, $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)/, $thing, $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -194,7 +195,7 @@ sub _at_dtpattern {
 	my $uri = $self->_uriref();
 	$self->__consume_ws();
 
-	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)\b/, RDF::Trine::Node::Literal->new('$0', undef, $uri), $self->{baseURI}];
+	push @{ $self->{shorthands} }, ['@pattern', qr/^($pattern)/, RDF::Trine::Node::Literal->new('$0', undef, $uri), $self->{baseURI}];
 	return $self->{shorthands}[-1];
 }
 
@@ -315,7 +316,7 @@ sub _resource {
 			{
 				my $replaced_uri = $self->_PATTERN_($token, $pattern, $full->literal_datatype);
 				my $absolute_uri = $self->__URI($replaced_uri, $basethen);
-				return RDF::Trine::Node::Literal->new(
+				return $self->__Literal(
 					$self->_PATTERN_($token, $pattern, $full->literal_value),
 					undef,
 					$absolute_uri,
@@ -323,7 +324,7 @@ sub _resource {
 			}
 			elsif ($full->is_literal)
 			{
-				return RDF::Trine::Node::Literal->new(
+				return $self->__Literal(
 					$self->_PATTERN_($token, $pattern, $full->literal_value),
 					($full->has_language ? $self->_PATTERN_($token, $pattern, $full->literal_value_language) : undef),
 					);
@@ -342,6 +343,21 @@ sub _resource {
 	}	
 
 	return $self->SUPER::_resource(@_);
+}
+
+sub __Literal
+{
+	my ($self, @args) = @_;
+	my $literal = $self->SUPER::__Literal(@args);
+	
+	if ($literal->has_datatype
+	and defined $self->{dt_callback}{$literal->literal_datatype})
+	{
+		my $rv = $self->{dt_callback}{$literal->literal_datatype}->($literal, $self->{handle_triple});
+		$literal = $rv if blessed($rv) && $rv->isa('RDF::Trine::Node');
+	}
+	
+	return $literal;
 }
 
 sub _PATTERN_

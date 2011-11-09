@@ -13,7 +13,7 @@ use 5.010;
 use strict;
 use warnings;
 no warnings 'redefine';
-use base qw(RDF::Trine::Node::Literal);
+use parent qw(RDF::Trine::Node::Literal);
 
 use RDF::Trine::Error;
 use RDF::Trine::Pattern;

@@ -30,7 +30,7 @@ use strict;
 use warnings;
 no warnings 'redefine';
 no warnings 'once';
-use base qw(RDF::Trine::Parser::Notation3);
+use parent qw(RDF::Trine::Parser::Notation3);
 use RDF::Trine qw(literal);
 use RDF::Trine::Statement;
 use RDF::Trine::Namespace;

@@ -34,7 +34,7 @@ package RDF::Trine::Serializer::Notation3;
 use 5.010;
 use strict;
 use warnings;
-use base qw(RDF::Trine::Serializer::NTriples);
+use parent qw(RDF::Trine::Serializer::NTriples);
 
 ######################################################################
 

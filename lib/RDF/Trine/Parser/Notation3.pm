@@ -27,7 +27,7 @@ use strict;
 use warnings;
 no warnings 'redefine';
 no warnings 'once';
-use base qw(RDF::Trine::Parser::Turtle);
+use parent qw(RDF::Trine::Parser::Turtle);
 use Data::UUID;
 use RDF::Trine qw();
 use RDF::Trine::Statement;

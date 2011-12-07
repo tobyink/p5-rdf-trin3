@@ -1,24 +1,3 @@
-# RDF::Trine::Parser::Notation3
-# -----------------------------------------------------------------------------
-
-=head1 NAME
-
-RDF::Trine::Parser::Notation3 - Notation 3 Parser
-
-=head1 SYNOPSIS
-
- use RDF::Trine::Parser;
- my $parser     = RDF::Trine::Parser->new( 'Notation3' );
- $parser->parse_into_model( $base_uri, $data, $model );
-
-=head1 METHODS
-
-This package exposes the standard RDF::Trine::Parser methods, plus:
-
-=over 4
-
-=cut
-
 package RDF::Trine::Parser::Notation3;
 
 use utf8;
@@ -27,7 +6,7 @@ use strict;
 use warnings;
 no warnings 'redefine';
 no warnings 'once';
-use parent qw(RDF::Trine::Parser::Turtle);
+use base qw(RDF::Trine::Parser::Turtle);
 use Data::UUID;
 use RDF::Trine qw();
 use RDF::Trine::Statement;
@@ -162,19 +141,6 @@ sub _quantifier {
 	return { $quantifier => [@terms] };
 }
 
-=item C<< forAll($handler) >>
-
-Sets a callback handler for @forAll directives found in the top-level
-graph. (@forAll found in nested formulae will not be passed to this callback.)
-
-The handler should be a coderef that takes a single argument: an
-RDF::Trine::Node::Resource.
-
-If you do not set a handler, a warning will be issued when this directive
-are encountered in the top level graph, but parsing will continue.
-
-=cut
-
 sub forAll {
 	my $self	= shift;
 	if (@_) {
@@ -182,12 +148,6 @@ sub forAll {
 	}
 	return $self->{handle_forall};
 }
-
-=item C<< forSome($handler) >>
-
-As C<forAll> but handles @forSome directives.
-
-=cut
 
 sub forSome {
 	my $self	= shift;
@@ -297,6 +257,7 @@ sub _predicateObjectList {
 sub _resource_test {
 	my $self	= shift;
 	return 0 unless (length($self->{tokens}));
+	return 0 if $self->{tokens} =~ m/^(true|false)\b/;
 	if ($self->{tokens} =~ m/^${RDF::Trine::Parser::Turtle::r_resource_test}/) {
 		return 1;
 	} elsif (defined $self->{'keywords'}
@@ -443,11 +404,6 @@ sub _formula_test {
 sub _formula {
 	my $self = shift;
 	
-	# divert triples inside the formula into @triples.
-	my @triples;
-	my @forAll;
-	my @forSome;
-
 	# blank node identifiers don't carry into formulae.
 	my $uuid = Data::UUID->new->create_str;
 	$uuid    =~ s/-//g;
@@ -455,30 +411,50 @@ sub _formula {
 	local($self->{bnode_map})    = {};
 	local($self->{bnode_id})     = 0;
 
+	# Formula pragmata is a clone of current pragmata, so that it can't leak.
+	my %old_pragmata = %{ $self->{pragmata} };
+	local($self->{pragmata}) = { %old_pragmata };
+
+	# divert triples inside the formula into @triples.
+	my @triples;
+	my @forAll;
+	my @forSome;
 	local($self->{handle_triple})  = sub { push @triples, $_[0]; };
 	local($self->{handle_forsome}) = sub { push @forSome, $_[0]; };
 	local($self->{handle_forall})  = sub { push @forAll, $_[0]; };
 	
 	$self->_eat('{');
 	
-	while (!$self->_test('}')) {
+	while (!$self->_test('}'))
+	{
 		$self->__consume_ws;
 		
-		STATEMENTLIST: while ($self->_triples_test || $self->_directive_test()) {			
-			if ($self->_triples_test) {
+		STATEMENTLIST:
+		while ($self->_triples_test || $self->_directive_test())
+		{
+			if ($self->_triples_test)
+			{
 				$self->_triples;
 				$self->__consume_ws;
-			} else {
+			}
+			else
+			{
 				$self->_directive();
 				$self->__consume_ws();
 			}
 			
-			if ($self->_test('.')) {
+			if ($self->_test('.'))
+			{
 				$self->_eat('.');
 				$self->__consume_ws;
-			} elsif ($self->_test('}')) {
+				last STATEMENTLIST if $self->_test('}');
+			}
+			elsif ($self->_test('}'))
+			{
 				last STATEMENTLIST;
-			} else {
+			}
+			else
+			{
 				throw RDF::Trine::Error::ParserError -text => "Unexpected content in formula: ".$self->{tokens};
 			}
 		}
@@ -494,13 +470,6 @@ sub _formula {
 	return $formula;
 }
 
-=item C<< parse_formula($base, $input) >>
-
-Returns an RDF::Trine::Node::Formula object representing the Notation 3
-formula given as $input. $input should not include the "{"..."}" wrappers.
-
-=cut
-
 sub parse_formula {
 	my $self  = shift;
 	my $uri   = shift;
@@ -515,6 +484,42 @@ sub parse_formula {
 1;
 
 __END__
+
+=head1 NAME
+
+RDF::Trine::Parser::Notation3 - Notation 3 Parser
+
+=head1 SYNOPSIS
+
+ use RDF::Trine::Parser;
+ my $parser     = RDF::Trine::Parser->new( 'Notation3' );
+ $parser->parse_into_model( $base_uri, $data, $model );
+
+=head1 METHODS
+
+This package exposes the standard RDF::Trine::Parser methods, plus:
+
+=over
+
+=item C<< forAll($handler) >>
+
+Sets a callback handler for @forAll directives found in the top-level
+graph. (@forAll found in nested formulae will not be passed to this callback.)
+
+The handler should be a coderef that takes a single argument: an
+RDF::Trine::Node::Resource.
+
+If you do not set a handler, a warning will be issued when this directive
+are encountered in the top level graph, but parsing will continue.
+
+=item C<< forSome($handler) >>
+
+As C<forAll> but handles @forSome directives.
+
+=item C<< parse_formula($base, $input) >>
+
+Returns an RDF::Trine::Node::Formula object representing the Notation 3
+formula given as $input. $input should not include the "{"..."}" wrappers.
 
 =back
 

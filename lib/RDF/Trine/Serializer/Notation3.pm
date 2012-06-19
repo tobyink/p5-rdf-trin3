@@ -40,7 +40,7 @@ use parent qw(RDF::Trine::Serializer::NTriples);
 
 our ($VERSION);
 BEGIN {
-	$VERSION	= '0.136';
+	$VERSION	= '0.140';
 	$RDF::Trine::Serializer::serializer_names{ 'notation3' } = __PACKAGE__;
 	$RDF::Trine::Serializer::serializer_names{ 'notation 3' } = __PACKAGE__;
 	foreach my $type (qw(text/n3)) {

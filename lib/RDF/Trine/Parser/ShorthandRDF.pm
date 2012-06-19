@@ -18,7 +18,7 @@ our ($VERSION, $AUTHORITY);
 
 BEGIN 
 {
-	$VERSION   = '0.136';
+	$VERSION   = '0.140';
 	$AUTHORITY = 'cpan:TOBYINK';
 	
 	my $class = __PACKAGE__;

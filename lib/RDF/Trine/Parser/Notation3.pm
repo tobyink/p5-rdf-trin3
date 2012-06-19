@@ -12,7 +12,7 @@ use Encode;
 use Log::Log4perl;
 use RDF::Trine qw();
 use RDF::Trine::Statement;
-use RDF::Trine::Namespace qw[rdf rdfs owl xsd];
+use RDF::Trine::Namespace qwRDF[rdf rdfs owl xsd];
 use RDF::Trine::Node;
 use RDF::Trine::Error;
 use Scalar::Util qw(blessed looks_like_number);
@@ -192,7 +192,6 @@ sub _test {
 	}
 }
 
-
 sub _triple {
 	my $self	= shift;
 	my $s		= shift;
@@ -205,13 +204,17 @@ sub _triple {
 	}
 	
 	if ($self->{canonicalize}) {
-		if ($o->isa('RDF::Trine::Node::Literal') and $o->has_datatype) {
-			my $value	= $o->literal_value;
-			my $dt		= $o->literal_datatype;
-			my $canon	= RDF::Trine::Node::Literal->canonicalize_literal_value( $value, $dt, 1 );
-			$o	= literal( $canon, undef, $dt );
+		foreach my $n ($s, $p, $o)
+		{
+			if ($n->isa('RDF::Trine::Node::Literal') and $n->has_datatype) {
+				my $value	= $o->literal_value;
+				my $dt		= $o->literal_datatype;
+				my $canon	= RDF::Trine::Node::Literal->canonicalize_literal_value($value, $dt, 1);
+				$n	= literal( $canon, undef, $dt );
+			}
 		}
 	}
+	
 	my $st	= RDF::Trine::Statement->new( $s, $p, $o );
 	if (my $code = $self->{handle_triple}) {
 		$code->( $st );
@@ -1377,7 +1380,7 @@ Based on RDF::Trine::Parser::Turtle by Gregory Todd Williams.
 
 Copyright (c) 2006-2010 Gregory Todd Williams. 
 
-Copyright (c) 2010-2011 Toby Inkster.
+Copyright (c) 2010-2012 Toby Inkster.
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

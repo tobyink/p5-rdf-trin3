@@ -904,7 +904,8 @@ sub _typed {
 			$value = $value . '.0';
 		}
 	}
-	return RDF::Trine::Node::Literal->new($value, undef, $datatype)
+	
+	return $self->__Literal($value, undef, $datatype)
 }
 
 sub __anonimize_bnode_id {
@@ -946,14 +947,25 @@ sub __bNode {
 
 sub __Literal {
 	my $self	= shift;
-	return RDF::Trine::Node::Literal->new( @_ )
+	my $lit = RDF::Trine::Node::Literal->new( @_ );
+	
+	no warnings;
+	if ($lit->has_datatype
+	and my $code = $self->{datatype_callback}{$lit->literal_datatype})
+	{
+		my $triple_callback = sub {
+			my ($s, $p, $o) = shift->nodes;
+			$self->_triple($s, $p, $o);
+		};
+		my $return = $code->($lit, $triple_callback);
+		if (blessed $return and $return->isa('RDF::Trine::Node'))
+		{
+			return $return;
+		}
+	}
+	
+	return $lit;
 }
-
-sub __DatatypedLiteral {
-	my $self	= shift;
-	return RDF::Trine::Node::Literal->new( $_[0], undef, $_[1] )
-}
-
 
 sub __startswith {
 	my $self	= shift;
@@ -1188,7 +1200,6 @@ sub _resource {
 	}
 }
 
-
 # What do I mean by "any node"?.
 sub _any_node {
 	my $self = shift;
@@ -1344,7 +1355,11 @@ RDF::Trine::Parser::Notation3 - Notation 3 Parser
  my $parser     = RDF::Trine::Parser->new( 'Notation3' );
  $parser->parse_into_model( $base_uri, $data, $model );
 
-=head1 METHODS
+=head1 DESCRIPTION
+
+This module provides a Notation 3 parser for RDF::Trine.
+
+=head2 Methods
 
 This package exposes the standard RDF::Trine::Parser methods, plus:
 
@@ -1371,6 +1386,32 @@ Returns an RDF::Trine::Node::Formula object representing the Notation 3
 formula given as $input. $input should not include the "{"..."}" wrappers.
 
 =back
+
+=head2 Datatype Callbacks
+
+The constructor accepts a hashref of callbacks associated with datatypes,
+which will be triggered after a literal has been parsed with that datatype.
+Let's imagine that you want to replace all xsd:integer literals with
+URIs like C<< http:;//example.net/numbers/123 >>...
+
+ my $parser = RDF::Trine::Parser::Notation3->new(
+   datatype_callback => {
+     'http://www.w3.org/2001/XMLSchema#integer' => sub {
+       my ($lit, $tr_hnd) = @_;
+       return RDF::Trine::Node::Resource->new(
+         'http:;//example.net/numbers/' . $lit->literal_value
+       );
+     },
+   },
+ );
+
+Note the second argument passed to the callback C<< $tr_hnd >>. We don't
+use it here, but it's a coderef that can be called with RDF::Trine::Statement
+objects to add additional triples to the graph being parsed.
+
+This facility, combined with shortcuts from
+L<RDF::Trine::Parser::ShorthandRDF> is pretty useful for creating
+domain-specific languages.
 
 =head1 AUTHOR
 

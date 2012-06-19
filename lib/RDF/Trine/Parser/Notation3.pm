@@ -203,14 +203,16 @@ sub _triple {
 		}
 	}
 	
-	if ($self->{canonicalize}) {
+	if ($self->{canonicalize})
+	{
 		foreach my $n ($s, $p, $o)
 		{
-			if ($n->isa('RDF::Trine::Node::Literal') and $n->has_datatype) {
-				my $value	= $o->literal_value;
-				my $dt		= $o->literal_datatype;
+			if ($n->isa('RDF::Trine::Node::Literal') and $n->has_datatype)
+			{
+				my $value	= $n->literal_value;
+				my $dt		= $n->literal_datatype;
 				my $canon	= RDF::Trine::Node::Literal->canonicalize_literal_value($value, $dt, 1);
-				$n	= literal( $canon, undef, $dt );
+				$n	= RDF::Trine::Node::Literal->new($canon, undef, $dt);
 			}
 		}
 	}

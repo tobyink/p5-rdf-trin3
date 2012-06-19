@@ -47,7 +47,8 @@ sub _Document {
 	$self->{keywords}     = undef;
 	$self->{shorthands}   = [];
 	$self->{pragmata}     = {};
-	$self->_apply_profile($self->{baseURI}, $self->{profile}, 0) if defined $self->{profile};
+	$self->_apply_profile($self->{baseURI}, $self->{profile}, 0)
+		if defined $self->{profile} && length $self->{profile};
 	$self->SUPER::_Document(@_);
 }
 
@@ -209,6 +210,7 @@ sub _at_pattern {
 	$self->__consume_ws();
 	
 	my $thing;
+	local($self->{suspend_callback}) = 1;
 	if ($self->_resource_test)
 		{ $thing = $self->_resource(); }
 	else
@@ -256,6 +258,7 @@ sub _at_term {
 	}
 	$self->__consume_ws();
 
+	local($self->{suspend_callback}) = 1;
 	my $thing = $self->_any_node();
 	$self->__consume_ws();
 
@@ -283,6 +286,7 @@ sub _at_pragma {
 	}
 	$self->__consume_ws();
 
+	local($self->{suspend_callback}) = 1;
 	my $value = $self->_any_node();
 	$self->__consume_ws();
 
@@ -327,10 +331,10 @@ sub _apply_profile
 	my ($self, $base, $data, $import) = @_;
 	
 	my $class = ref $self;
-	my $child = $class->new;
+	my $child = $class->new(profile => '');
 	$child->parse($base, $data, sub {
 		$self->{handle_triple}->($_[0]) if $import;
-		});
+	});
 		
 	my %child_bindings = %{ $child->{bindings} || {} };
 	while (my ($prefix, $full) = each %child_bindings)

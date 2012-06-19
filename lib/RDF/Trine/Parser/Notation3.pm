@@ -950,7 +950,8 @@ sub __Literal {
 	my $lit = RDF::Trine::Node::Literal->new( @_ );
 	
 	no warnings;
-	if ($lit->has_datatype
+	if (!$self->{suspend_callback}
+	and $lit->has_datatype
 	and my $code = $self->{datatype_callback}{$lit->literal_datatype})
 	{
 		my $triple_callback = sub {

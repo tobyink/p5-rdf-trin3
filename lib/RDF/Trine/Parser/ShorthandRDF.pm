@@ -408,21 +408,6 @@ sub _resource {
 	return $self->SUPER::_resource(@_);
 }
 
-sub __Literal
-{
-	my ($self, @args) = @_;
-	my $literal = $self->SUPER::__Literal(@args);
-	
-	if ($literal->has_datatype
-	and defined $self->{dt_callback}{$literal->literal_datatype})
-	{
-		my $rv = $self->{dt_callback}{$literal->literal_datatype}->($literal, $self->{handle_triple});
-		$literal = $rv if blessed($rv) && $rv->isa('RDF::Trine::Node');
-	}
-	
-	return $literal;
-}
-
 sub _PATTERN_
 {
 	my ($self, $thingy, $pattern, $template) = @_;
@@ -506,7 +491,7 @@ RDF::Trine::Parser::ShorthandRDF - Shorthand RDF Parser
 ShorthandRDF is an extension of N3 syntax. It's currently defined at
 L<http://esw.w3.org/ShorthandRDF>.
 
-=head1 METHODS
+=head2 Methods
 
 This package exposes the same methods as RDF::Trine::Parser::Notation3.
 

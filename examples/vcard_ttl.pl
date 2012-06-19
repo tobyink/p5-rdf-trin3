@@ -27,7 +27,7 @@ my $parser = RDF::Trine::Parser::ShorthandRDF->new(
 	# Detect BEGIN:VCARD...END:VCARD and automatically convert to a typed literal.
 	profile => '@dtpattern "(?i:BEGIN\:VCARD)(?s:(.+?))(?i:END\:VCARD)" <http://example.net/person> .',
 	# Run this callback when the datatype is detected.
-	dt_callback => {
+	datatype_callback => {
 		'http://example.net/person' => sub
 			{
 				my ($node, $callback) = @_;

@@ -63,7 +63,7 @@ NOTATION3
 
 my $parser = RDF::Trine::Parser::ShorthandRDF->new(
 	profile     => '@import <http://buzzword.org.uk/2009/microturtle/profile.n3x> .',
-	dt_callback => {
+	datatype_callback => {
 		'http://buzzword.org.uk/2009/microturtle/person'  => \&cb_person,
 		'http://buzzword.org.uk/2009/microturtle/hashtag' => \&cb_hashtag,
 		});

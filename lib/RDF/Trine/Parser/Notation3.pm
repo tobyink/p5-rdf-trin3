@@ -12,7 +12,7 @@ use Encode;
 use Log::Log4perl;
 use RDF::Trine qw();
 use RDF::Trine::Statement;
-use RDF::Trine::Namespace qwRDF[rdf rdfs owl xsd];
+use RDF::Trine::Namespace qw[rdf rdfs owl xsd];
 use RDF::Trine::Node;
 use RDF::Trine::Error;
 use Scalar::Util qw(blessed looks_like_number);

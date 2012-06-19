@@ -43,9 +43,6 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 @prefix earl:        <http://www.w3.org/ns/earl#> .
 @prefix pretdsl:     <http://ontologi.es/pretdsl#> .
 @prefix pretdsl-dt:  <http://ontologi.es/pretdsl#dt/> .
-@prefix rt-ticket:   <http://purl.org/NET/cpan-uri/rt/ticket/> .
-@prefix rt-status:   <http://purl.org/NET/cpan-uri/rt/status/> .
-@prefix rt-priority: <http://purl.org/NET/cpan-uri/rt/priority/> .
 
 # Useful XSD datatypes
 @dtpattern
@@ -74,6 +71,9 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 @pattern
 	"cpan:(?<x>\\w+)"
 	"$x"^^pretdsl-dt:CpanId .
+@pattern
+	"RT#(?<x>\\d+)"
+	"$x"^^pretdsl-dt:RtBug .
 
 # Generally useful predicates
 @term label    rdfs:label .
@@ -160,6 +160,8 @@ _CB_
 	$cb->(statement($node, $curie->URI('doap:programming-language'), literal('Perl')));
 	$cb->(statement($node, $curie->doap_homepage, $metacpan));
 	$cb->(statement($node, $curie->URI('doap:download-page'), $metacpan));
+	$cb->(statement($node, $curie->rev_hasReview, iri("http://cpants.charsbar.org/dist/kwalitee/$dist")));
+	$cb->(statement($node, $curie->rev_hasReview, iri(sprintf "http://www.cpantesters.org/distro/%s/%s.html", uc(substr $dist, 0, 1), $dist)));
 	
 	return $node;
 } 'Project';
@@ -184,6 +186,7 @@ _CB_
 	$cb->(statement($dist_node, $curie->doap_release, $node));
 	$cb->(statement($node, $curie->rdf_type, $curie->doap_Version));
 	$cb->(statement($node, $curie->doap_revision, literal($version, undef, $curie->xsd_string->uri)));
+	$cb->(statement($node, $curie->dcterms_identifier, literal("$dist-$version", undef, $curie->xsd_string->uri)));
 	
 	if ($author =~ /^cpan:(\w+)$/)
 	{
@@ -192,7 +195,8 @@ _CB_
 			'http://purl.org/NET/cpan-uri/person/%s',
 			lc $author,
 		));
-		$cb->(statement($node, $curie->dcterms_publisher, $author_node));
+		$cb->(statement($node, iri('http://ontologi.es/doap-changeset#released-by'), $author_node));
+		$cb->(statement($dist_node, $curie->dcterms_contributor, $author_node));
 		my $download = iri(sprintf(
 			'http://backpan.cpan.org/authors/id/%s/%s/%s/%s-%s.tar.gz',
 			substr(uc $author, 0, 1),
@@ -225,6 +229,16 @@ _CB_
 	$cb->(statement($node, $curie->foaf_page, iri(sprintf 'https://metacpan.org/author/%s', uc $lit->literal_value)));
 	return $node;
 } 'CpanId';
+
+_CB_
+{
+	my ($lit, $cb) = @_;
+	my $node = iri(sprintf('http://purl.org/NET/cpan-uri/rt/ticket/%d', $lit->literal_value));
+	$cb->(statement($node, $curie->rdf_type, iri('http://ontologi.es/doap-bugs#Issue')));
+	$cb->(statement($node, iri('http://ontologi.es/doap-bugs#page'), iri(sprintf 'https://rt.cpan.org/Ticket/Display.html?id=%d', $lit->literal_value)));
+	$cb->(statement($node, iri('http://ontologi.es/doap-bugs#id'), literal($lit->literal_value, undef, $curie->xsd_string->uri)));
+	return $node;
+} 'RtBug';
 
 foreach my $change_type (qw(
 	Addition Bugfix Change Documentation Packaging Regression

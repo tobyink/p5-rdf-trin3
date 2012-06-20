@@ -41,6 +41,7 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 @prefix dcs:         <http://ontologi.es/doap-changeset#> .
 @prefix doap:        <http://usefulinc.com/ns/doap#> .
 @prefix earl:        <http://www.w3.org/ns/earl#> .
+@prefix nfo:         <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#> .
 @prefix pretdsl:     <http://ontologi.es/pretdsl#> .
 @prefix pretdsl-dt:  <http://ontologi.es/pretdsl#dt/> .
 
@@ -55,7 +56,7 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 # Other datatype shorthands
 @pattern
 	"`(?<x>.+?)`"
-	"$x"^^pretdsl-dt:ProjectOrVersion .
+	"$x"^^pretdsl-dt:PerlResourceIdentifier .
 @pattern
 	"p`(?<x>.+?)`"
 	"$x"^^pretdsl-dt:Project .
@@ -96,6 +97,7 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 @term test_requires          cpant:test_requires .
 @term configure_requires     cpant:configure_requires .
 @term build_requires         cpant:build_requires .
+@term provides               cpant:provides .
 
 # Changelog predicates
 @term issued     dc:issued .
@@ -135,10 +137,17 @@ _CB_
 {
 	my ($lit, $cb) = @_;
 	my ($dist, $version, $author) = split /\s+/, $lit->literal_value;
-	goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Version'}
-		if length $version;
+	if ($dist =~ m{::}) {
+		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Module'}
+	}
+	if ($dist =~ m{/}) {
+		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/File'}
+	}
+	if (length $version) {
+		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Version'}
+	}
 	goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Project'};
-} 'ProjectOrVersion';
+} 'PerlResourceIdentifier';
 
 _CB_
 {
@@ -187,7 +196,10 @@ _CB_
 	$cb->(statement($node, $curie->rdf_type, $curie->doap_Version));
 	$cb->(statement($node, $curie->doap_revision, literal($version, undef, $curie->xsd_string->uri)));
 	$cb->(statement($node, $curie->dcterms_identifier, literal("$dist-$version", undef, $curie->xsd_string->uri)));
-	
+
+	$cb->(statement($node, $curie->rdf_type, iri('http://purl.org/NET/cpan-uri/terms#DeveloperRelease')))
+		if $version =~ m{dev|_}i;
+
 	if ($author =~ /^cpan:(\w+)$/)
 	{
 		$author = $1;
@@ -214,11 +226,66 @@ _CB_
 _CB_
 {
 	my ($lit, $cb) = @_;
-	my $node = blank();
+	my ($filename, $dist, $ver, $author) = split /\s+/, $lit->literal_value;
+	$filename =~ s{^[.]/}{};
+	
+	my ($author_cpan) = ($author =~ m{^cpan:(\w+)$}i);
+	
+	my $node;
+	if ($filename and $dist and $ver and $author_cpan)
+	{
+		$node = iri(sprintf 'http://api.metacpan.org/source/%s/%s-%s/%s', $author_cpan, $dist, $ver, $filename);
+
+		my $release_download = iri(sprintf(
+			'http://backpan.cpan.org/authors/id/%s/%s/%s/%s-%s.tar.gz',
+			substr(uc $author_cpan, 0, 1),
+			substr(uc $author_cpan, 0, 1),
+			uc($author_cpan),
+			$dist,
+			$ver,
+		));
+		
+		$cb->(statement($node, $curie->nfo_belongsToContainer, $release_download));
+	}
+	else
+	{
+		$node = blank();
+	}
+
 	$cb->(statement($node, $curie->rdf_type, $curie->nfo_FileDataObject));
-	$cb->(statement($node, $curie->nfo_fileName, literal($lit->literal_value)));
+	$cb->(statement($node, $curie->nfo_fileName, literal($filename)));
+
+	if ($filename =~ /\.(PL|pl|pm|t|xs|c)$/)
+		{ $cb->(statement($node, $curie->rdf_type, $curie->nfo_SourceCode)) }
+
+	if ($filename =~ /\.(PL|pl|pm)$/)
+		{ $cb->(statement($node, $curie->nfo_programmingLanguage, literal('Perl'))) }
+
+	if ($filename =~ /\.(html)$/)
+		{ $cb->(statement($node, $curie->rdf_type, $curie->nfo_HtmlDocument)) }
+		
+	if ($filename =~ /\.(pod)$/)
+		{ $cb->(statement($node, $curie->rdf_type, $curie->nfo_Document)) }
+
+	if ($filename =~ /^(Changes|README|TODO|LICENSE|INSTALL|NEWS|FAQ|.*\.txt)$/)
+		{ $cb->(statement($node, $curie->rdf_type, $curie->nfo_TextDocument)) }
+
 	return $node;
 } 'File';
+
+_CB_
+{
+	my ($lit, $cb) = @_;
+	my ($mod, $ver) = split /\s+/, $lit->literal_value;
+	$mod =~ s{^::}{};
+	
+	if (length $ver)
+	{
+		return literal("$mod $ver", undef, "http://purl.org/NET/cpan-uri/terms#dsWithVersion");
+	}
+	
+	return literal("$mod", undef, "http://purl.org/NET/cpan-uri/terms#dsWithoutVersion");
+} 'Module';
 
 _CB_
 {

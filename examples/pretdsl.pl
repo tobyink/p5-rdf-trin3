@@ -6,6 +6,7 @@ use RDF::TrineX::Parser::Pretdsl;
 
 # Namespaces are just for Turtle output!
 my $ns = {
+	cpant   => 'http://purl.org/NET/cpan-uri/terms#',
 	cpan    => 'http://purl.org/NET/cpan-uri/person/',
 	dbug    => 'http://ontologi.es/doap-bugs#',
 	dcs     => 'http://ontologi.es/doap-changeset#',
@@ -13,6 +14,7 @@ my $ns = {
 	dist    => 'http://purl.org/NET/cpan-uri/dist/Example-Distribution/',
 	doap    => 'http://usefulinc.com/ns/doap#',
 	foaf    => 'http://xmlns.com/foaf/0.1/',
+	nfo     => 'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#',
 	rdfs    => 'http://www.w3.org/2000/01/rdf-schema#',
 	rev     => 'http://purl.org/stuff/rev#',
 	xsd     => 'http://www.w3.org/2001/XMLSchema#',
@@ -24,11 +26,18 @@ my $pretdsl = <<'DATA';
 doap:developer cpan:TOBYINK ;
 doap:maintainer cpan:TOBYINK .
 
+`Example-Distribution 0.000_01 cpan:TOBYINK`
+issued 2012-06-17 .
+
 `Example-Distribution 0.001 cpan:TOBYINK`
 issued 2012-06-18 .
 
 `Example-Distribution 0.002 cpan:TOBYINK`
 issued 2012-06-19 ;
+provides `Example::Distribution` ;
+provides `Example::Distribution::Helper` ;
+dcs:hasPart `./README Example-Distribution 0.002 cpan:TOBYINK` ;
+dcs:hasPart `lib/Example/Distribution.pm` ;
 changeset [
 	item "More monkey madness!"^^Addition ;
 	item "Less lion laziness!"^^Removal ;

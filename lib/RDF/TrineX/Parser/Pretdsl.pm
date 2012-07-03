@@ -173,8 +173,6 @@ _CB_
 	$cb->(statement($node, $curie->URI('doap:programming-language'), literal('Perl')));
 	$cb->(statement($node, $curie->doap_homepage, $metacpan));
 	$cb->(statement($node, $curie->URI('doap:download-page'), $metacpan));
-	$cb->(statement($node, $curie->rev_hasReview, iri("http://cpants.charsbar.org/dist/kwalitee/$dist")));
-	$cb->(statement($node, $curie->rev_hasReview, iri(sprintf "http://www.cpantesters.org/distro/%s/%s.html", uc(substr $dist, 0, 1), $dist)));
 	
 	return $node;
 } 'Distribution';

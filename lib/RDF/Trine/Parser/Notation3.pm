@@ -25,7 +25,7 @@ our ($VERSION, $AUTHORITY);
 
 BEGIN 
 {
-	$VERSION   = '0.140';
+	$VERSION   = '0.200';
 	$AUTHORITY = 'cpan:TOBYINK';
 }
 

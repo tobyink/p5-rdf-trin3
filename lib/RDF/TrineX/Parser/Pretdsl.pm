@@ -214,7 +214,7 @@ _CB_
 		my $download = iri(sprintf(
 			'http://backpan.cpan.org/authors/id/%s/%s/%s/%s-%s.tar.gz',
 			substr(uc $author, 0, 1),
-			substr(uc $author, 0, 1),
+			substr(uc $author, 0, 2),
 			uc($author),
 			$dist,
 			$version,
@@ -241,7 +241,7 @@ _CB_
 		my $release_download = iri(sprintf(
 			'http://backpan.cpan.org/authors/id/%s/%s/%s/%s-%s.tar.gz',
 			substr(uc $author_cpan, 0, 1),
-			substr(uc $author_cpan, 0, 1),
+			substr(uc $author_cpan, 0, 2),
 			uc($author_cpan),
 			$dist,
 			$ver,

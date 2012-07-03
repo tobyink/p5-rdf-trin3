@@ -34,15 +34,17 @@ issued 2012-06-18 .
 
 `Example-Distribution 0.002 cpan:TOBYINK`
 issued 2012-06-19 ;
-provides `Example::Distribution` ;
-provides `Example::Distribution::Helper` ;
+provides `Example::Distribution Example-Distribution 0.002 cpan:TOBYINK` ;
+provides `Example::Distribution::Helper Example-Distribution 0.002 cpan:TOBYINK` ;
 dcs:hasPart `./README Example-Distribution 0.002 cpan:TOBYINK` ;
-dcs:hasPart `lib/Example/Distribution.pm` ;
 changeset [
 	item "More monkey madness!"^^Addition ;
 	item "Less lion laziness!"^^Removal ;
 	item [ a dcs:Bugfix ; dcs:fixes RT#12345 ; label "Too much focus on lazy cats, but not enough focus on excited primates." ] ;
 ] .
+
+`Example::Distribution Example-Distribution 0.002 cpan:TOBYINK` dcs:defines p`Example::Distribution`.
+`Example::Distribution::Helper Example-Distribution 0.002 cpan:TOBYINK` dcs:defines p`Example::Distribution::Helper`.
 
 DATA
 

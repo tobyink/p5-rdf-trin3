@@ -58,11 +58,14 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 	"`(?<x>.+?)`"
 	"$x"^^pretdsl-dt:PerlResourceIdentifier .
 @pattern
-	"p`(?<x>.+?)`"
-	"$x"^^pretdsl-dt:Project .
+	"d`(?<x>.+?)`"
+	"$x"^^pretdsl-dt:Distribution .
 @pattern
-	"v`(?<x>.+?)`"
-	"$x"^^pretdsl-dt:Version .
+	"r`(?<x>.+?)`"
+	"$x"^^pretdsl-dt:Release .
+@pattern
+	"p`(?<x>.+?)`"
+	"$x"^^pretdsl-dt:Package .
 @pattern
 	"m`(?<x>.+?)`"
 	"$x"^^pretdsl-dt:Module .
@@ -121,6 +124,7 @@ PRETDSL_PROFILE
 
 our $CALLBACKS = {};
 
+use Module::Runtime qw< module_notional_filename > ;
 use RDF::Trine qw< statement iri blank literal >;
 use RDF::NS::Trine;
 
@@ -144,9 +148,9 @@ _CB_
 		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/File'}
 	}
 	if (length $version) {
-		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Version'}
+		goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Release'}
 	}
-	goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Project'};
+	goto $CALLBACKS->{'http://ontologi.es/pretdsl#dt/Distribution'};
 } 'PerlResourceIdentifier';
 
 _CB_
@@ -173,7 +177,7 @@ _CB_
 	$cb->(statement($node, $curie->rev_hasReview, iri(sprintf "http://www.cpantesters.org/distro/%s/%s.html", uc(substr $dist, 0, 1), $dist)));
 	
 	return $node;
-} 'Project';
+} 'Distribution';
 
 _CB_
 {
@@ -221,7 +225,7 @@ _CB_
 	}
 	
 	return $node;
-} 'Version';
+} 'Release';
 
 _CB_
 {
@@ -276,6 +280,22 @@ _CB_
 _CB_
 {
 	my ($lit, $cb) = @_;
+	my ($filename, $dist, $ver, $author) = split /\s+/, $lit->literal_value;
+	$filename =~ s{^::}{};
+	my $joined = join q( ), grep defined,
+		sprintf('lib/%s', module_notional_filename($filename)),
+		$dist,
+		$ver,
+		$author,
+		;
+	my $r = $CALLBACKS->{'http://ontologi.es/pretdsl#dt/File'}->(literal($joined), $cb);
+	$cb->(statement($r, $curie->rdfs_label, literal($filename)));
+	return $r;
+} 'Module';
+
+_CB_
+{
+	my ($lit, $cb) = @_;
 	my ($mod, $ver) = split /\s+/, $lit->literal_value;
 	$mod =~ s{^::}{};
 	
@@ -285,7 +305,7 @@ _CB_
 	}
 	
 	return literal("$mod", undef, "http://purl.org/NET/cpan-uri/terms#dsWithoutVersion");
-} 'Module';
+} 'Package';
 
 _CB_
 {

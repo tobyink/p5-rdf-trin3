@@ -499,9 +499,15 @@ L<http://esw.w3.org/ShorthandRDF>.
 
 This package exposes the same methods as RDF::Trine::Parser::Notation3.
 
+=head1 BUGS
+
+Please report any bugs to
+L<http://rt.cpan.org/Dist/Display.html?Queue=RDF-TriN3>.
+
 =head1 SEE ALSO
 
 L<RDF::TriN3>,
+L<RDF::Trine::Parser::Pretdsl>,
 L<RDF::Trine::Parser::Notation3>.
 
 L<http://esw.w3.org/ShorthandRDF>.
@@ -516,7 +522,7 @@ Based on RDF::Trine::Parser::Turtle by Gregory Todd Williams.
 
 Copyright (c) 2006-2010 Gregory Todd Williams. 
 
-Copyright (c) 2010-2011 Toby Inkster.
+Copyright (c) 2010-2012 Toby Inkster.
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -1414,6 +1414,17 @@ This facility, combined with shortcuts from
 L<RDF::Trine::Parser::ShorthandRDF> is pretty useful for creating
 domain-specific languages.
 
+=head1 BUGS
+
+Please report any bugs to
+L<http://rt.cpan.org/Dist/Display.html?Queue=RDF-TriN3>.
+
+=head1 SEE ALSO
+
+L<RDF::Trine::Parser::NTriples>,
+L<RDF::Trine::Parser::Turtle>,
+L<RDF::Trine::Parser::ShorthandRDF>.
+
 =head1 AUTHOR
 
 Toby Inkster  C<< <tobyink@cpan.org> >>

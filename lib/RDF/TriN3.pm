@@ -37,8 +37,8 @@ notation - L<http://esw.w3.org/ShorthandRDF>.
 =head1 BUGS AND LIMITATIONS
 
 Implementing N3 logic and the cwm built-ins is considered outside the scope
-of this module, though I am interested in doing that as part of a separate
-project.
+of this distribution, though I am interested in doing that as part of a
+separate project.
 
 RDF::TriN3 currently relies entirely on RDF::Trine to provide implementations
 of the concept of graphs, and storage. Thus any graphs that can't be

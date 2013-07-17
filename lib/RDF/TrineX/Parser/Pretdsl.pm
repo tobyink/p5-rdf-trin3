@@ -5,7 +5,7 @@ use warnings;
 no warnings qw( void once uninitialized numeric );
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '0.203';
+our $VERSION   = '0.204';
 
 our $PROFILE = <<'PRETDSL_PROFILE';
 

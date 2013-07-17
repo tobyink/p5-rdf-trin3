@@ -114,7 +114,7 @@ our $PROFILE = <<'PRETDSL_PROFILE';
 @term Change              pretdsl-dt:Change .
 @term Documentation       pretdsl-dt:Documentation .
 @term Packaging           pretdsl-dt:Packaging .
-@term Regresion           pretdsl-dt:Regression .
+@term Regression          pretdsl-dt:Regression .
 @term Removal             pretdsl-dt:Removal .
 @term SecurityFix         pretdsl-dt:SecurityFix .
 @term SecurityRegression  pretdsl-dt:SecurityRegression .

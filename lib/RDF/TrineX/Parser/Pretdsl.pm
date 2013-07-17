@@ -1,5 +1,9 @@
 package RDF::TrineX::Parser::Pretdsl;
 
+use strict;
+use warnings;
+no warnings qw( void once uninitialized numeric );
+
 our $AUTHORITY = 'cpan:TOBYINK';
 our $VERSION   = '0.203';
 

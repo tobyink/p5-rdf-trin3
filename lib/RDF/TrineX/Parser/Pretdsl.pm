@@ -333,8 +333,8 @@ _CB_
 } 'RtBug';
 
 foreach my $change_type (qw(
-	Addition Bugfix Change Documentation Packaging Regression
-	Removal SecurityFix SecurityRegression Update
+	Addition BackCompat Bugfix Change Documentation Packaging Regression
+	Removal SecurityFix SecurityRegression Tests Update
 ))
 {
 	_CB_

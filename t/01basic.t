@@ -1,4 +1,4 @@
-use Test::More tests => 7;
+use Test::More tests => 9;
 BEGIN { use_ok('RDF::TriN3') };
 
 my $model = RDF::Trine::Model->temporary_model;
@@ -39,3 +39,13 @@ while (my $st = $iter->next)
 }
 
 ok($f->pattern->[0]->isa('RDF::Trine::Statement'), 'Formulae can be introspected.');
+
+
+my $parser = RDF::Trine::Parser::Notation3->new( 
+    namespaces => { foaf => 'http://xmlns.com/foaf/0.1/' }
+);
+ok($parser && $parser->namespaces->{foaf}, "Created parser with namespaces");
+my $formula = $parser->parse_formula(undef,'?a foaf:knows ?b');
+my ($predicate) = map { $_->predicate } $formula->pattern->triples;
+is( $predicate->uri, 'http://xmlns.com/foaf/0.1/knows' );
+

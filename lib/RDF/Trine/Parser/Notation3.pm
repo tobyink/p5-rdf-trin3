@@ -89,7 +89,7 @@ sub new {
 		$prefix	= $class->new_bnode_prefix();
 	}
 	my $self	= bless({
-					bindings		=> {},
+					bindings		=> $args{namespaces} || {},
 					bnode_id		=> 0,
 					bnode_prefix	=> $prefix,
 					@_
@@ -1342,6 +1342,10 @@ sub parse_formula {
 	return $self->_formula;
 }
 
+sub namespaces {
+    $_[0]->{bindings};
+}
+
 1;
 
 __END__
@@ -1385,6 +1389,11 @@ As C<forAll> but handles @forSome directives.
 
 Returns an RDF::Trine::Node::Formula object representing the Notation 3
 formula given as $input. $input should not include the "{"..."}" wrappers.
+
+=item C<< namespaces >>
+
+Returns defined namespaces as (possibly blessed) hash reference. Namespaces can
+be predefined with the constructor option C<namespaces>.
 
 =back
 
